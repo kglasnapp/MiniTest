@@ -11,14 +11,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.RobotContainer.RobotMode;
+import frc.robot.subsystems.LedSubsystem.Leds;
 
 public class IntakeSubsystem extends SubsystemBase {
     private static final int GRABBER_INTAKE_MOTOR_ID = 10;
     private double lastIntakePower = 0;
     private final CANSparkMax intakeMotor;
     private final double defaultIntakePower = .3;
-    private final double overCurrentPower = .1;
-    private final double maxCurrent = 8;
+    private final double overCurrentPower = .05;
+    private final double maxCurrent = 2;
     private int timeOverMax = 0;
     private int timeAtOverCurrent = 0;
 
@@ -26,9 +27,9 @@ public class IntakeSubsystem extends SubsystemBase {
         // Setup parameters for the intake motor
         intakeMotor = new CANSparkMax(GRABBER_INTAKE_MOTOR_ID, MotorType.kBrushless);
         intakeMotor.restoreFactoryDefaults();
-        // TODO  Limit currnet for Testing
-        intakeMotor.setSmartCurrentLimit(5);
+        intakeMotor.setSmartCurrentLimit(3);
         intakeOff();
+        RobotContainer.leds.setOverCurrent(Leds.IntakeOverCurrent, false);
     }
 
     public void setBrakeMode(boolean mode) {
@@ -68,21 +69,24 @@ public class IntakeSubsystem extends SubsystemBase {
     private void setReducedIntakePower() {
         intakeMotor.set(overCurrentPower);
     }
+
     // This method will be called once per scheduler run
     @Override
     public void periodic() {
         double current = intakeMotor.getOutputCurrent();
         if (current > maxCurrent) {
             timeOverMax++;
-            if(timeOverMax > 4) {
+            if (timeOverMax > 4) {
                 setReducedIntakePower();
+                RobotContainer.leds.setOverCurrent(Leds.IntakeOverCurrent, true);
                 timeAtOverCurrent = 15;
             }
         }
-        if(timeAtOverCurrent > 0) {
+        if (timeAtOverCurrent > 0) {
             timeAtOverCurrent--;
         } else {
             setIntakePower(lastIntakePower);
+            RobotContainer.leds.setOverCurrent(Leds.IntakeOverCurrent, false);
         }
         if (Robot.count % 20 == 6) {
             SmartDashboard.putNumber("Intk Cur", current);

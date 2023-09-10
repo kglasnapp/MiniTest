@@ -33,7 +33,7 @@ public class Robot extends TimedRobot {
     // autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
     alliance = DriverStation.getAlliance();
-    Util.logf("Start Sibling %s\n", alliance.toString());
+    Util.logf("Start Sibling Alliance:%s\n", alliance.toString());
     RobotContainer.leds.setAllianceLeds();
   }
 
@@ -85,6 +85,9 @@ public class Robot extends TimedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+    alliance = DriverStation.getAlliance();
+    Util.logf("Enable Robot Alliance: %s\n", alliance.toString());
+    RobotContainer.leds.setAllianceLeds();
   }
 
   /** This function is called periodically during operator control. */

@@ -23,8 +23,8 @@ public class LedSubsystem extends SubsystemBase {
     }
 
     public enum Leds {
-        RobotAlliance(0, 8), GrabberForward(8, 1), GrabberReverse(9, 1), ElevatorForward(11, 1), ElevatorReverse(10, 1),
-        RobotMode(12, 9), IntakeOverCurrent(20, 1);
+        RobotAlliance(0, 8), GrabberForward(10, 1), GrabberReverse(11, 1), ElevatorForward(13, 1),
+        ElevatorReverse(14, 1),  RobotMode(16, 9), IntakeOverCurrent(27, 3);
 
         public final int val;
         public final int number;
@@ -40,8 +40,9 @@ public class LedSubsystem extends SubsystemBase {
         if (Robot.count % 5 == 0) {
             if (change) {
                 m_led.setData(m_ledBuffer);
+				change = false;
             }
-            change = false;
+            
         }
     }
 
@@ -53,7 +54,7 @@ public class LedSubsystem extends SubsystemBase {
         // Set the data
         m_led.setData(m_ledBuffer);
         m_led.start();
-      
+
     }
 
     private void setColors(Leds led, int r, int g, int b) {
@@ -65,9 +66,9 @@ public class LedSubsystem extends SubsystemBase {
 
     public void setLimitSwitchLed(Leds led, boolean value) {
         if (value) {
-            m_ledBuffer.setRGB(led.val, 80, 0, 0);
+            setColors(led, 80, 0, 0);
         } else {
-            m_ledBuffer.setRGB(led.val, 0, 80, 0);
+            setColors(led, 0, 80, 0);
         }
         change = true;
     }
@@ -85,6 +86,14 @@ public class LedSubsystem extends SubsystemBase {
             setColors(Leds.RobotMode, 80, 0, 80);
         } else {
             setColors(Leds.RobotMode, 80, 80, 0);
+        }
+    }
+
+    public void setOverCurrent(Leds led, boolean value) {
+        if (value) {
+            setColors(led, 80, 0, 0);
+        } else {
+            setColors(led, 0, 80, 0);
         }
     }
 }

@@ -29,9 +29,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.commands.ChaseTagCommand;
 import frc.robot.commands.DefaultDriveCommand;
-import frc.robot.commands.ElevatorCommand;
+import frc.robot.commands.DefaultElevatorCommand;
 import frc.robot.commands.FieldHeadingDriveCommand;
-import frc.robot.commands.GrabberDefaultCommand;
+import frc.robot.commands.DefaultGrabberCommand;
+import frc.robot.commands.PositionCommand;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.GrabberTiltSubsystem;
@@ -69,12 +70,13 @@ public class RobotContainer {
     }
   }
 
-  private final static CommandXboxController controller = new CommandXboxController(2);
+  private final static CommandXboxController driveController = new CommandXboxController(2);
+  private final static CommandXboxController operatorController = new CommandXboxController(3);
   //private final PhotonCamera photonCamera = new PhotonCamera("photonvision");
   private final PhotonCamera photonCamera = null;
-  private final GrabberTiltSubsystem grabberSubsystem = new GrabberTiltSubsystem();
-  //private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  //private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+  public final GrabberTiltSubsystem grabberSubsystem = new GrabberTiltSubsystem();
+  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  public final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
   
   private final Drivetrain drivetrain = new Drivetrain();
   private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(photonCamera, drivetrain);
@@ -85,10 +87,10 @@ public class RobotContainer {
   private final FieldHeadingDriveCommand fieldHeadingDriveCommand = new FieldHeadingDriveCommand(
       drivetrain,
       () -> poseEstimator.getCurrentPose().getRotation(),
-      () -> -modifyAxis(controller.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
-      () -> -modifyAxis(controller.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
-      () -> -controller.getRightY(),
-      () -> -controller.getRightX());
+      () -> -modifyAxis(driveController.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
+      () -> -modifyAxis(driveController.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
+      () -> -driveController.getRightY(),
+      () -> -driveController.getRightX());
 
   public static boolean smartForElevator = true;
   public static RobotMode robotMode;
@@ -105,13 +107,14 @@ public class RobotContainer {
     drivetrain.setDefaultCommand(new DefaultDriveCommand(
         drivetrain,
         () -> poseEstimator.getCurrentPose().getRotation(),
-        () -> -modifyAxis(controller.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
-        () -> -modifyAxis(controller.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
-        () -> -modifyAxis(controller.getRightX()) * DrivetrainConstants.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND / 2));
+        () -> -modifyAxis(driveController.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
+        () -> -modifyAxis(driveController.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
+        () -> -modifyAxis(driveController.getRightX()) * DrivetrainConstants.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND / 2));
 
     setMode(RobotMode.Cone);
-    grabberSubsystem.setDefaultCommand(new GrabberDefaultCommand(grabberSubsystem, null, controller));
-    //elevatorSubsystem.setDefaultCommand(new ElevatorCommand(elevatorSubsystem, controller));
+    grabberSubsystem.setDefaultCommand(new DefaultGrabberCommand(grabberSubsystem, intakeSubsystem, driveController));
+    elevatorSubsystem.setDefaultCommand(new DefaultElevatorCommand(elevatorSubsystem, driveController));
+    
 
     // Configure the button bindings
     configureButtonBindings();
@@ -123,7 +126,7 @@ public class RobotContainer {
   }
 
   public static int getDriverPov() {
-    return controller.getHID().getPOV();
+    return driveController.getHID().getPOV();
   }
 
   public void setMode(RobotMode mode) {
@@ -141,22 +144,24 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Back button resets the robot pose
-    controller.back().onTrue(Commands.runOnce(poseEstimator::resetFieldPosition, drivetrain));
-    controller.y().whileTrue(chaseTagCommand);
-    controller.start().toggleOnTrue(fieldHeadingDriveCommand);
-    controller.button(OperatorButtons.CONE.value).onTrue(Commands.runOnce(new Runnable() {
-      //   controller.button(OperatorButtons.CONE.value).onTrue((new Runnable() {
+    driveController.back().onTrue(Commands.runOnce(poseEstimator::resetFieldPosition, drivetrain));
+    driveController.y().whileTrue(chaseTagCommand);
+    driveController.start().toggleOnTrue(fieldHeadingDriveCommand);
+    operatorController.button(OperatorButtons.CONE.value).onTrue(Commands.runOnce(new Runnable() {
       public void run() {
         setMode(RobotMode.Cone);
       }
     }));
 
-    controller.button(OperatorButtons.CUBE.value).onTrue(Commands.runOnce(new Runnable() {
-      //   controller.button(OperatorButtons.CUBE.value).onTrue(new RunCommand(new Runnable() {
+    operatorController.button(OperatorButtons.CUBE.value).onTrue(Commands.runOnce(new Runnable() {
       public void run() {
         setMode(RobotMode.Cube);
       }
     }));
+    operatorController.button(OperatorButtons.HIGH.value).onTrue(new PositionCommand(this, OperatorButtons.HIGH));
+    operatorController.button(OperatorButtons.MIDDLE.value).onTrue(new PositionCommand(this, OperatorButtons.MIDDLE));
+    operatorController.button(OperatorButtons.LOW.value).onTrue(new PositionCommand(this, OperatorButtons.LOW));  
+    operatorController.button(OperatorButtons.HOME.value).onTrue(new PositionCommand(this, OperatorButtons.HOME));  
   }
 
   /**
