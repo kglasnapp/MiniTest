@@ -48,8 +48,6 @@ import static frc.robot.utilities.Util.logf;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-
-  // TODO Adjust to show correct PID on the Smart Dash Board
   public static ShowPID showPID = ShowPID.TILT;
 
   public static enum RobotMode {
@@ -77,7 +75,7 @@ public class RobotContainer {
   public final GrabberTiltSubsystem grabberSubsystem = new GrabberTiltSubsystem();
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   public final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
-  
+
   private final Drivetrain drivetrain = new Drivetrain();
   private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(photonCamera, drivetrain);
 
@@ -109,12 +107,12 @@ public class RobotContainer {
         () -> poseEstimator.getCurrentPose().getRotation(),
         () -> -modifyAxis(driveController.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
         () -> -modifyAxis(driveController.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
-        () -> -modifyAxis(driveController.getRightX()) * DrivetrainConstants.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND / 2));
+        () -> -modifyAxis(driveController.getRightX()) * DrivetrainConstants.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
+            / 2));
 
     setMode(RobotMode.Cone);
     grabberSubsystem.setDefaultCommand(new DefaultGrabberCommand(grabberSubsystem, intakeSubsystem, driveController));
-    elevatorSubsystem.setDefaultCommand(new DefaultElevatorCommand(elevatorSubsystem, driveController));
-    
+    elevatorSubsystem.setDefaultCommand(new DefaultElevatorCommand(elevatorSubsystem, grabberSubsystem, driveController));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -158,10 +156,25 @@ public class RobotContainer {
         setMode(RobotMode.Cube);
       }
     }));
+
+    driveController.start().onTrue(Commands.runOnce(new Runnable() {
+      public void run() {
+        if (showPID == ShowPID.TILT) {
+          showPID = ShowPID.ELEVATOR;
+        } else {
+          showPID = ShowPID.TILT;
+        }
+        logf("Change PID control to %s\n", showPID);
+      }
+    }));
+
     operatorController.button(OperatorButtons.HIGH.value).onTrue(new PositionCommand(this, OperatorButtons.HIGH));
     operatorController.button(OperatorButtons.MIDDLE.value).onTrue(new PositionCommand(this, OperatorButtons.MIDDLE));
-    operatorController.button(OperatorButtons.LOW.value).onTrue(new PositionCommand(this, OperatorButtons.LOW));  
-    operatorController.button(OperatorButtons.HOME.value).onTrue(new PositionCommand(this, OperatorButtons.HOME));  
+    operatorController.button(OperatorButtons.LOW.value).onTrue(new PositionCommand(this, OperatorButtons.LOW));
+    operatorController.button(OperatorButtons.GROUND.value).onTrue(new PositionCommand(this, OperatorButtons.GROUND));
+    operatorController.button(OperatorButtons.CHUTE.value).onTrue(new PositionCommand(this, OperatorButtons.CHUTE));
+    operatorController.button(OperatorButtons.SHELF.value).onTrue(new PositionCommand(this, OperatorButtons.SHELF));
+    operatorController.button(OperatorButtons.HOME.value).onTrue(new PositionCommand(this, OperatorButtons.HOME));
   }
 
   /**

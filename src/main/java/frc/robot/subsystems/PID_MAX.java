@@ -43,6 +43,22 @@ public class PID_MAX {
         pidName = "Elevator";
     }
     
+    public void PIDCoefficientsIntake(SparkMaxPIDController pidController) {
+        kP = .01;
+        kI = 0;
+        kD = 0;
+        kIz = 0;
+        kFF = 0;
+        kMaxOutput = 1;
+        kMinOutput = -1;
+        // Smart Motion Coefficients
+        // maxRPM = 5700; // for velocity mode
+        maxVel = 2000; // for velocity mode
+        maxAcc = 1500;
+        this.pidController =  pidController;
+        pidName = "Intake";
+
+    }
 
     public void PIDToMax() {
         // set PID coefficients
@@ -83,6 +99,7 @@ public class PID_MAX {
 
     public void getPidCoefficientsFromDashBoard() {
         // read PID coefficients from SmartDashboard
+        SmartDashboard.putString("PID", pidName);
         double p = SmartDashboard.getNumber("P Gain", 0);
         double i = SmartDashboard.getNumber("I Gain", 0);
         double d = SmartDashboard.getNumber("D Gain", 0);

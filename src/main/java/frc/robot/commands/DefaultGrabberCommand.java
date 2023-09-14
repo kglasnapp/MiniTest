@@ -2,7 +2,6 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.GrabberTiltSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -35,7 +34,7 @@ public class DefaultGrabberCommand extends CommandBase {
         if (intakeSubsystem != null) {
             intakeSubsystem.intakeOff();
         }
-        logf("Init Grabber Default %d\n", Robot.count);
+        logf("Init Grabber Default Command\n");
     }
 
     @Override

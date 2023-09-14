@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static frc.robot.Util.logf;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -37,13 +38,13 @@ public class LedSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (Robot.count % 5 == 0) {
+        //if (Robot.count % 5 == 0) {
             if (change) {
                 m_led.setData(m_ledBuffer);
 				change = false;
             }
             
-        }
+        //}
     }
 
     private void initNeoPixel() {
@@ -70,7 +71,6 @@ public class LedSubsystem extends SubsystemBase {
         } else {
             setColors(led, 0, 80, 0);
         }
-        change = true;
     }
 
     public void setAllianceLeds() {
@@ -90,6 +90,7 @@ public class LedSubsystem extends SubsystemBase {
     }
 
     public void setOverCurrent(Leds led, boolean value) {
+        logf("**** set over current led\n");
         if (value) {
             setColors(led, 80, 0, 0);
         } else {

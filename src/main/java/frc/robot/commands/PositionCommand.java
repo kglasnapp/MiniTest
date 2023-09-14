@@ -34,14 +34,20 @@ public class PositionCommand extends CommandBase {
         timeOut = 200;
         switch (type) {
             case HOME:
-               tiltAngle = 0;
-               elevatorDistance = 0;
-            case CONE:
-            case CUBE:
+                tiltAngle = 0;
+                elevatorDistance = 0;
                 break;
             case CHUTE:
+                tiltAngle = 50;
+                elevatorDistance = 40;
+                break;
             case SHELF:
+                tiltAngle = 20;
+                elevatorDistance = 15;
+                break;
             case GROUND:
+                tiltAngle = 1;
+                elevatorDistance = 1;
                 break;
             case HIGH:
                 tiltAngle = 8;
@@ -54,6 +60,10 @@ public class PositionCommand extends CommandBase {
             case LOW:
                 tiltAngle = 2;
                 elevatorDistance = 3;
+                break;
+            case CONE:
+                break;
+            case CUBE:
                 break;
         }
         robotContainer.grabberSubsystem.setTiltAngle(tiltAngle);
@@ -69,14 +79,18 @@ public class PositionCommand extends CommandBase {
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-        logf("End Position Command for %s\n", type);
     }
 
     // Returns true when the command should end.
     @Override
     public boolean isFinished() {
+        if (robotContainer.grabberSubsystem.atSetPoint() && robotContainer.elevatorSubsystem.atSetPoint()) {
+            logf("Requested Positon Reached for type:%s\n", type);
+            return true;
+        }
         timeOut--;
         if (timeOut < 0) {
+            logf("Timeout Position Command for %s\n", type);
             return true;
         }
         return false;

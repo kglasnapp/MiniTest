@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static frc.robot.Util.logf;
 import static frc.robot.Util.round2;
+import static frc.robot.Util.normalizeAngle;
 
 import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
@@ -49,14 +50,18 @@ import frc.robot.utilities.LimitSwitch;
 
 public class GrabberTiltSubsystem extends SubsystemBase {
     private static final int GRABBER_TILT_MOTOR_ID = 12;
-    private double lastTiltPosition;
+    // this is the conversion ratio from the absolute encoder to the relative encoder of 
+    // the tilt motor 
+    final static double ABSOLUTE_ENCODER_RATIO = 360;
+
+    private double lastTiltRotations;
     private double lastTiltAngle = 0;
     private CANSparkMax grabberTiltMotor;
     private SparkMaxPIDController pidController;
     private RelativeEncoder tiltEncoder;
     private PID_MAX pid = new PID_MAX();
-    private CANCoder angleEncoder;
-    private double ticksPerDegree = 1;
+    private CANCoder absEncoder;
+    private double rotationsPerDegree = 1;  // TODO fix when connected to Sibling
     private LimitSwitch limitSwitch;
 
     public GrabberTiltSubsystem() {
@@ -65,15 +70,18 @@ public class GrabberTiltSubsystem extends SubsystemBase {
         grabberTiltMotor = new CANSparkMax(GRABBER_TILT_MOTOR_ID, MotorType.kBrushless);
         grabberTiltMotor.restoreFactoryDefaults();
         grabberTiltMotor.setSmartCurrentLimit(2);
+
         limitSwitch = new LimitSwitch(grabberTiltMotor, "Tlt", Leds.GrabberForward, Leds.GrabberReverse);
+        absEncoder = new CANCoder(9);
         tiltEncoder = grabberTiltMotor.getEncoder();
-        tiltEncoder.setPosition(0);
+        tiltEncoder.setPosition(absEncoder.getAbsolutePosition() / ABSOLUTE_ENCODER_RATIO);
         pidController = grabberTiltMotor.getPIDController();
+
         pid.PIDCoefficientsTilt(pidController);
         pid.PIDToMax();
         pid.putPidCoefficientToDashBoard();
         /* Angle Encoder Config */
-        angleEncoder = new CANCoder(9);
+
         //setTiltAngle(0);
         logf("Grabber System Setup kP for Tilt:%.6f Conversion Factor:%.2f Counts per Rev:%d\n", pid.kP,
                 tiltEncoder.getPositionConversionFactor(), tiltEncoder.getCountsPerRevolution());
@@ -88,13 +96,13 @@ public class GrabberTiltSubsystem extends SubsystemBase {
             return false;
         }
 
-        double setPoint = angle * ticksPerDegree;
+        double setPointRotations = angle * rotationsPerDegree;
         lastTiltAngle = angle;
-        lastTiltPosition = setPoint;
+        lastTiltRotations = setPointRotations;
 
-        logf("Set tilt angle:%.2f set point:%f kp:%f\n", angle, setPoint, pidController.getP());
-        pidController.setReference(setPoint, CANSparkMax.ControlType.kSmartMotion);
-        SmartDashboard.putNumber("Tilt SP", setPoint);
+        logf("Set tilt angle:%.2f set point:%f kp:%f\n", angle, setPointRotations, pidController.getP());
+        pidController.setReference(setPointRotations, CANSparkMax.ControlType.kSmartMotion);
+        SmartDashboard.putNumber("Tilt SPR", setPointRotations);
         SmartDashboard.putNumber("Tilt Ang", angle);
         return true;
     }
@@ -108,12 +116,16 @@ public class GrabberTiltSubsystem extends SubsystemBase {
         logf("Brake mode: %s\n", grabberTiltMotor.getIdleMode());
     }
 
-    public double getTiltPos() {
+    public double getTiltRotations() {
         return tiltEncoder.getPosition();
     }
 
+    public double getTiltAngleDegrees() {
+        return tiltEncoder.getPosition() / rotationsPerDegree;
+    }
+
     public double getLastTiltPos() {
-        return lastTiltPosition;
+        return lastTiltRotations;
     }
 
     public double getTiltCurrent() {
@@ -121,30 +133,58 @@ public class GrabberTiltSubsystem extends SubsystemBase {
     }
 
     public boolean getForwardLimitSwitchTilt() {
-       return limitSwitch.getForward();
+        return limitSwitch.getForward();
     }
 
     public boolean getReverseLimitSwitchTilt() {
         return limitSwitch.getReverse();
     }
 
+    public boolean atSetPoint() {
+        double error = tiltEncoder.getPosition() - lastTiltRotations;
+        if (Robot.count % 10 == 5) {
+            SmartDashboard.putNumber("TiltErr", error);
+        }
+        // Note error is in revolutions
+        return Math.abs(error) < .1;
+    }
+
+    // If grabber retracted it is safe to move the elevator
+    public boolean retracted() {
+        return Math.abs(normalizeAngle(absEncoder.getAbsolutePosition())) < 5;
+    }
+
+    // If grabber retracted it is safe to move the elevator
+    public double getAbsEncoder() {
+        return absEncoder.getAbsolutePosition();
+    }
+
     // This method will be called once per scheduler run
     @Override
     public void periodic() {
         limitSwitch.periodic();
+        if (Robot.count % 250 == 0) {
+            // we adjust the relative encoder of the tilt
+            // motor every 5 secs
+            double tiltAbsolutePosition = getAbsEncoder();
+            // TODO put back in when connected to actual intake
+            // tiltEncoder.setPosition(tiltAbsolutePosition / ABSOLUTE_ENCODER_RATIO);
+            logf("Motor Tilt Angle:%.3f Abs Encoder Rotations:%.3f Angle:%.3f\n", getTiltAngleDegrees(), tiltAbsolutePosition / ABSOLUTE_ENCODER_RATIO,
+                     getAbsEncoder());
+        }
         if (RobotContainer.smartForElevator) {
             if (Robot.count % 15 == 5) {
                 double current = getTiltCurrent();
                 SmartDashboard.putNumber("TltCur", round2(current));
-                SmartDashboard.putNumber("TltPos", round2(getTiltPos()));
-                SmartDashboard.putNumber("TltLastPos", lastTiltPosition);
+                SmartDashboard.putNumber("TltAng", round2(getTiltAngleDegrees()));
+                SmartDashboard.putNumber("TltLastRot", lastTiltRotations);
                 SmartDashboard.putNumber("TltPwr", round2(grabberTiltMotor.getAppliedOutput()));
             }
             if (Robot.count % 30 == 10) {
                 if (RobotContainer.showPID == ShowPID.TILT) {
-                    //pid.getPidCoefficientsFromDashBoard();
+                    pid.getPidCoefficientsFromDashBoard();
                 }
-                SmartDashboard.putNumber("Abs Tlt Ang", round2(angleEncoder.getAbsolutePosition()));
+                SmartDashboard.putNumber("AbsTltAng", round2(absEncoder.getAbsolutePosition()));
             }
         }
     }

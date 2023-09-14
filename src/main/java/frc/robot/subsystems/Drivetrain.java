@@ -3,7 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
-
+import static frc.robot.Util.logf;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -29,14 +29,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.SPI;
+//import edu.wpi.first.wpilibj.SPI;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DrivetrainConstants;
 import static frc.robot.Constants.AutoConstants.THETA_CONSTRAINTS;
 
 /** Represents a differential drive style drivetrain. */
 public class Drivetrain extends SubsystemBase {
-  private final AHRS navx = new AHRS(SPI.Port.kMXP, (byte) 200); // NavX connected over MXP
+  //private final AHRS navx = new AHRS(SPI.Port.kMXP, (byte) 200); // NavX connected over MXP
   public static final double kMaxSpeed = 3.0; // meters per second
   public static final double kMaxAngularSpeed = 2 * Math.PI; // one rotation per second
 
@@ -63,12 +63,14 @@ public class Drivetrain extends SubsystemBase {
 
   private final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(kTrackWidth);
 
+  public final AHRS m_navx = new AHRS(); // NavX connected over MXP
+
   /*
    * Here we use DifferentialDrivePoseEstimator so that we can fuse odometry
    * readings. The numbers used below are robot specific, and should be tuned.
    */
   private final DifferentialDrivePoseEstimator poseEstimator = new DifferentialDrivePoseEstimator(kinematics,
-      navx.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance(), new Pose2d(),
+      m_navx.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance(), new Pose2d(),
       VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5)), VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(30)));
 
   // Gains are for example purposes only - must be determined for your own robot!
@@ -81,7 +83,7 @@ public class Drivetrain extends SubsystemBase {
    * and resets the gyro.
    */
   public Drivetrain() {
-    navx.reset();
+    m_navx.reset();
 
     // We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
@@ -134,13 +136,13 @@ public class Drivetrain extends SubsystemBase {
   public ChassisSpeeds getChassisSpeeds() {
     ChassisSpeeds  x = new ChassisSpeeds();
     ChassisSpeeds.fromFieldRelativeSpeeds(wheelSpeeds.rightMetersPerSecond, wheelSpeeds.leftMetersPerSecond, 9.0,
-        navx.getRotation2d());
+        m_navx.getRotation2d());
     return x;
   }
 
   /** Updates the field-relative position. */
   public void updateOdometry() {
-    poseEstimator.update(navx.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
+    poseEstimator.update(m_navx.getRotation2d(), leftEncoder.getDistance(), rightEncoder.getDistance());
 
     // Also apply vision measurements. We use 0.3 seconds in the past as an example
     // -- on
@@ -159,11 +161,11 @@ public class Drivetrain extends SubsystemBase {
   }
 
   public Rotation2d getGyroscopeRotation() {
-    return navx.getRotation2d();
+    return m_navx.getRotation2d();
   }
 
   public void stop() {
-    drive(0, navx.getAngle());
+    drive(0, m_navx.getAngle());
   }
 
   public Command createCommandForTrajectory(Trajectory trajectory, Supplier<Pose2d> poseSupplier) {
@@ -187,4 +189,54 @@ public class Drivetrain extends SubsystemBase {
 
     return x;
   }
+
+  /**
+   * Sets the gyroscope angle to zero. This can be used to set the direction the
+   * robot is currently facing to the
+   * 'forwards' direction.
+   */
+  public void zeroGyroscope() {
+    // FIXed Remove if you are using a Pigeon
+    // m_pigeon.setFusedHeading(0.0);
+
+    // FIXed Uncomment if you are using a NavX
+    logf("zero Gyro DT\n");
+    currentOrientation = 0;
+    if (m_navx.isMagnetometerCalibrated()) {
+      // // We will only get valid fused headings if the magnetometer is calibrated
+      // System.out.println("returning the angle FUSE ZERO from the robot:
+      // "+m_navx.getAngle());
+      zeroNavx = m_navx.getFusedHeading();
+    } else {
+      zeroNavx = 0;
+    }
+
+    // m_navx.reset();
+    m_navx.zeroYaw();
+  }
+
+  public void zeroGyroscope(double currentOrientation) {
+    // FIXed Remove if you are using a Pigeon
+    // m_pigeon.setFusedHeading(0.0);
+
+    // FIXed Uncomment if you are using a NavX
+    logf("zero Gyro\n");
+
+    if (m_navx.isMagnetometerCalibrated()) {
+      // // We will only get valid fused headings if the magnetometer is calibrated
+      // System.out.println("returning the angle FUSE ZERO from the robot:
+      // "+m_navx.getAngle());
+      zeroNavx = m_navx.getFusedHeading();
+    } else {
+      zeroNavx = 0;
+    }
+
+    this.currentOrientation = currentOrientation;
+
+    // m_navx.reset();
+    m_navx.zeroYaw();
+  }
+
+  double currentOrientation = 0.0;
+  double zeroNavx = 0.0;
 }

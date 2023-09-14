@@ -55,12 +55,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     private SparkMaxPIDController pidController;
     private RelativeEncoder distanceEncoder;
     private PID_MAX pid = new PID_MAX();
-    private double elevatorTicksPerInch = 1;
-
-    public static double HOME_POS = 0.0;
-    public static double LOW_POS = 0.0;
-    public static double MEDIUM_POS = 0.0;
-    public static double HIGH_POS = 0.0;
+    private boolean homed = false;
+    private double elevatorRotationsPerInch = 1;  // TODO Fix when connect to real robot
+    private double current = 0;
 
     public ElevatorSubsystem() {
 
@@ -83,7 +80,7 @@ public class ElevatorSubsystem extends SubsystemBase {
             logf("****** Error attempted to set position out of range positon:%.1f\n", inches);
             return false;
         }
-        double setPoint = inches * elevatorTicksPerInch;
+        double setPoint = inches * elevatorRotationsPerInch;
         lastElevatorSetPoint = setPoint;
         lastElevatorPosition = inches;
         logf("Set Elevator position:%.2f set point:%f\n", inches, setPoint);
@@ -91,6 +88,10 @@ public class ElevatorSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Elev SP", setPoint);
         SmartDashboard.putNumber("Elev Inch", inches);
         return true;
+    }
+
+    public void setPower(double value) {
+        elevatorMotor.set(value);
     }
 
     public double getLastElevatorPositionInches() {
@@ -115,7 +116,16 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public double getElevatorCurrent() {
-        return elevatorMotor.getOutputCurrent();
+        return current;
+    }
+
+    public boolean atSetPoint() {
+        double error = distanceEncoder.getPosition() - lastElevatorPosition;
+        if (Robot.count % 10 == 5) {
+            SmartDashboard.putNumber("EleErr", error);
+        }
+        // Note error is in revolutions
+        return Math.abs(error) < .1;
     }
 
     public boolean getForwardLimitSwitch() {
@@ -126,21 +136,35 @@ public class ElevatorSubsystem extends SubsystemBase {
         return limitSwitch.getReverse();
     }
 
+    public boolean getHomed() {
+        return homed;
+    }
+
+    public void setHomed(boolean value) {
+        homed = value;
+    }
+
+    public void setEncoder(double value) {
+        distanceEncoder.setPosition(value);
+    }
+
     // This method will be called once per scheduler run
     @Override
     public void periodic() {
         limitSwitch.periodic();
+        current = getElevatorCurrent();
         //pidController.setReference(lastElevatorPosition, CANSparkMax.ControlType.kSmartMotion);
         if (Robot.count % 15 == 8) {
-            double current = getElevatorCurrent();
+
             SmartDashboard.putNumber("ElevCur", round2(current));
             SmartDashboard.putNumber("ElevPos", round2(getElevatorPos()));
             SmartDashboard.putNumber("ElevLastPos", lastElevatorPosition);
             SmartDashboard.putNumber("ElevPwr", round2(elevatorMotor.getAppliedOutput()));
         }
         if (RobotContainer.showPID == ShowPID.ELEVATOR && Robot.count % 15 == 12) {
-            // if ( Robot.count % 15 == 12) {
-            //pid.getPidCoefficientsFromDashBoard();
+            if (Robot.count % 15 == 12) {
+                pid.getPidCoefficientsFromDashBoard();
+            }
         }
     }
 }
