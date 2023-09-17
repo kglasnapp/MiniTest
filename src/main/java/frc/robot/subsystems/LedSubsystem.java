@@ -90,7 +90,7 @@ public class LedSubsystem extends SubsystemBase {
     }
 
     public void setOverCurrent(Leds led, boolean value) {
-        logf("**** set over current led\n");
+        logf("**** set over current led %b\n", value);
         if (value) {
             setColors(led, 80, 0, 0);
         } else {

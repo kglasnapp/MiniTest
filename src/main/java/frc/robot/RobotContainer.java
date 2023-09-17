@@ -74,7 +74,7 @@ public class RobotContainer {
   private final PhotonCamera photonCamera = null;
   public final GrabberTiltSubsystem grabberSubsystem = new GrabberTiltSubsystem();
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  public final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+  public final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem(grabberSubsystem);
 
   private final Drivetrain drivetrain = new Drivetrain();
   private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(photonCamera, drivetrain);
@@ -90,7 +90,7 @@ public class RobotContainer {
       () -> -driveController.getRightY(),
       () -> -driveController.getRightX());
 
-  public static boolean smartForElevator = true;
+  public static boolean smartDashBoardForElevator = true;
   public static RobotMode robotMode;
   public static LedSubsystem leds = new LedSubsystem();
 

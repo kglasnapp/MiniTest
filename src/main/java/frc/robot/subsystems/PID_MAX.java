@@ -44,7 +44,7 @@ public class PID_MAX {
     }
     
     public void PIDCoefficientsIntake(SparkMaxPIDController pidController) {
-        kP = .01;
+        kP = .03;
         kI = 0;
         kD = 0;
         kIz = 0;
@@ -62,7 +62,7 @@ public class PID_MAX {
 
     public void PIDToMax() {
         // set PID coefficients
-        logf("Set PID data to the controller kP:%.5f\n", kP);
+        logf("Set PID data to the controller %s kP:%.5f\n", pidName, kP);
         pidController.setP(kP);
         pidController.setI(kI);
         pidController.setD(kD);
