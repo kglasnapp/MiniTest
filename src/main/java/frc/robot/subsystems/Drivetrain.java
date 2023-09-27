@@ -88,7 +88,7 @@ public class Drivetrain extends SubsystemBase {
     // We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead.
-    rightGroup.setInverted(true);
+    leftGroup.setInverted(true);
 
     // Set the distance per pulse for the drive encoders. We can simply use the
     // distance traveled for one rotation of the wheel divided by the encoder
@@ -111,8 +111,10 @@ public class Drivetrain extends SubsystemBase {
 
     final double leftOutput = leftPIDController.calculate(leftEncoder.getRate(), speeds.leftMetersPerSecond);
     final double rightOutput = rightPIDController.calculate(rightEncoder.getRate(), speeds.rightMetersPerSecond);
-    leftGroup.setVoltage(leftOutput + leftFeedforward);
-    rightGroup.setVoltage(rightOutput + rightFeedforward);
+
+    // Did * .2 to reduce the speed
+    leftGroup.setVoltage((leftOutput + leftFeedforward) * .2);
+    rightGroup.setVoltage((rightOutput + rightFeedforward) * .2);
     SmartDashboard.putNumber("Left Volts", leftOutput + leftFeedforward);
     SmartDashboard.putNumber("Right Volts", rightOutput + rightFeedforward);
   }
@@ -124,11 +126,13 @@ public class Drivetrain extends SubsystemBase {
    * @param rot    Angular velocity in rad/s.
    */
   public void drive(double xSpeed, double rot) {
+    //logf("Set Speeds xSpeed:%.2f rot%.2f\n", xSpeed, rot);
     wheelSpeeds = kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0.0, rot));
     setSpeeds(wheelSpeeds);
   }
 
   public void drive(ChassisSpeeds x) {
+    //logf("Set Speeds Chassis:%s\n", x.toString());
     wheelSpeeds = kinematics.toWheelSpeeds(x);
     setSpeeds(wheelSpeeds);
   }
@@ -165,7 +169,8 @@ public class Drivetrain extends SubsystemBase {
   }
 
   public void stop() {
-    drive(0, m_navx.getAngle());
+    // TODO drive(0, m_navx.getAngle());
+    drive(0, 0);
   }
 
   public Command createCommandForTrajectory(Trajectory trajectory, Supplier<Pose2d> poseSupplier) {

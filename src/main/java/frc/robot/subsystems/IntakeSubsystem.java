@@ -20,11 +20,11 @@ public class IntakeSubsystem extends SubsystemBase {
     private static final int GRABBER_INTAKE_MOTOR_ID = 10;
     private double lastIntakePower = 0;
     private final CANSparkMax intakeMotor;
-    private final double defaultIntakePower = .3;
+    private final double defaultIntakePower = .6;
     private final double overCurrentPower = .05;
     private final double maxCurrent = 10;
     private final double maxCurrentLow = 2;
-    private PID_MAX pid = new PID_MAX();
+    //private PID_MAX pid = new PID_MAX();
     //private int timeOverMax = 0;
     //private int timeAtOverCurrent = 0;
     private SparkMaxPIDController pidController;
@@ -58,17 +58,17 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void intakeIn() {
         if (RobotContainer.robotMode == RobotMode.Cone) {
-            setIntakePower(defaultIntakePower);
-        } else {
             setIntakePower(-defaultIntakePower);
+        } else {
+            setIntakePower(defaultIntakePower);
         }
     }
 
     public void intakeOut() {
         if (RobotContainer.robotMode == RobotMode.Cone) {
-            setIntakePower(-defaultIntakePower);
-        } else {
             setIntakePower(defaultIntakePower);
+        } else {
+            setIntakePower(-defaultIntakePower);
         }
     }
 

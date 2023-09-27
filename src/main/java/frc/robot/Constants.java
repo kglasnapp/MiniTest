@@ -32,6 +32,7 @@ public final class Constants {
 
   public static final boolean logging = true;
   public static final String robotType = "Keith Mini";
+  public static final boolean isMini = true;
 
   public static final class DrivetrainConstants {
 
@@ -61,8 +62,7 @@ public final class Constants {
      * line.
      */
     public static final double MAX_VELOCITY_METERS_PER_SECOND = 6380.0 / 60.0 * DRIVETRAIN_WHEEL_GEAR_REDUCTION
-        * DRIVETRAIN_WHEEL_DIAMETER_METERS * PI;
-
+        * DRIVETRAIN_WHEEL_DIAMETER_METERS * PI ;
     /**
      * The maximum angular velocity of the robot in radians per second.
      * <p>

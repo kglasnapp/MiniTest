@@ -19,6 +19,7 @@ import frc.robot.RobotContainer.ShowPID;
 import frc.robot.subsystems.LedSubsystem.Leds;
 import frc.robot.utilities.LimitSwitch;
 import frc.robot.utilities.RunningAverage;
+import static frc.robot.Constants.isMini;
 
 /**
  * REV Smart Motion Guide
@@ -61,7 +62,7 @@ public class GrabberTiltSubsystem extends SubsystemBase {
     private SparkMaxPIDController pidController;
     private RelativeEncoder tiltEncoder;
     private PID_MAX pid = new PID_MAX();
-    private CANCoder absEncoder;
+    private CANCoder absEnc;
     private double rotationsPerDegree = 1; // TODO fix when connected to Sibling
     private LimitSwitch limitSwitch;
     private boolean homed = false;
@@ -82,12 +83,12 @@ public class GrabberTiltSubsystem extends SubsystemBase {
         // Setup paramters for the tilt motor
         grabberTiltMotor = new CANSparkMax(GRABBER_TILT_MOTOR_ID, MotorType.kBrushless);
         grabberTiltMotor.restoreFactoryDefaults();
-        grabberTiltMotor.setSmartCurrentLimit(2);
+        grabberTiltMotor.setSmartCurrentLimit(10);
 
         limitSwitch = new LimitSwitch(grabberTiltMotor, "Tlt", Leds.GrabberForward, Leds.GrabberReverse);
-        absEncoder = new CANCoder(9);
+        absEnc = new CANCoder(9);
         tiltEncoder = grabberTiltMotor.getEncoder();
-        tiltEncoder.setPosition(absEncoder.getAbsolutePosition() / ABSOLUTE_ENCODER_RATIO);
+        tiltEncoder.setPosition(getAbsEncoder() / ABSOLUTE_ENCODER_RATIO);
         pidController = grabberTiltMotor.getPIDController();
 
         pid.PIDCoefficientsTilt(pidController);
@@ -98,9 +99,6 @@ public class GrabberTiltSubsystem extends SubsystemBase {
         //setTiltAngle(0);
         logf("Grabber System Setup kP for Tilt:%.6f Conversion Factor:%.2f Counts per Rev:%d\n", pid.kP,
                 tiltEncoder.getPositionConversionFactor(), tiltEncoder.getCountsPerRevolution());
-
-        // Limit currnet for Testing
-        grabberTiltMotor.setSmartCurrentLimit(2);
     }
 
     public boolean setTiltAngle(double angle) {
@@ -169,12 +167,20 @@ public class GrabberTiltSubsystem extends SubsystemBase {
 
     // If grabber nearly retracted it is safe to move the elevator
     public boolean isRetracted() {
-        return Math.abs(normalizeAngle(absEncoder.getAbsolutePosition())) < 5;
+        return Math.abs(normalizeAngle(getAbsEncoder())) < 5;
     }
 
     // If grabber truely at home return true
     public boolean isEncoderHomed() {
-        return Math.abs(normalizeAngle(absEncoder.getAbsolutePosition())) < 4;
+        return Math.abs(normalizeAngle(getAbsEncoder())) < 4;
+    }
+
+    public boolean isElevatorSafeToMove() {
+        if (isMini) {
+            return true; // Testing with mini it is always safe to move elevator
+        }
+        double angle = getAbsEncoder();
+        return angle > 75 && angle < 105;
     }
 
     public boolean isReady() {
@@ -191,7 +197,8 @@ public class GrabberTiltSubsystem extends SubsystemBase {
 
     // If grabber retracted it is safe to move the elevator
     public double getAbsEncoder() {
-        return absEncoder.getAbsolutePosition();
+        double angle = absEnc.getAbsolutePosition();
+        return 178 - angle;
     }
 
     // This method will be called once per scheduler run
@@ -199,7 +206,6 @@ public class GrabberTiltSubsystem extends SubsystemBase {
     public void periodic() {
         limitSwitch.periodic();
         double current = getTiltCurrent();
-        // TODO Add back in after tilt motor works correctly
         doHoming(current);
         if (RobotContainer.smartDashBoardForElevator) {
             if (Robot.count % 15 == 5) {
@@ -212,19 +218,18 @@ public class GrabberTiltSubsystem extends SubsystemBase {
                 if (RobotContainer.showPID == ShowPID.TILT) {
                     pid.getPidCoefficientsFromDashBoard();
                 }
-                SmartDashboard.putNumber("AbsTltAng", round2(absEncoder.getAbsolutePosition()));
+                SmartDashboard.putNumber("AbsTltAng", round2(getAbsEncoder()));
             }
         }
 
-        if (Robot.count % 250 == 0) {
+        if (Robot.count % 500 == 0) {
             // we adjust the relative encoder of the tilt
             // motor every 5 secs
             double tiltAbsolutePosition = getAbsEncoder();
             // TODO put back in when connected to actual intake
             // tiltEncoder.setPosition(tiltAbsolutePosition / ABSOLUTE_ENCODER_RATIO);
-            logf("Motor Tilt Angle:%.3f Abs Encoder Rotations:%.3f Angle:%.3f\n", getTiltAngleDegrees(),
-                    tiltAbsolutePosition / ABSOLUTE_ENCODER_RATIO,
-                    getAbsEncoder());
+            logf("Tilt Motor Angle:%.3f  Abs Encoder Rotations:%.3f Abs Encoder Angle:%.3f\n", getTiltAngleDegrees(),
+                    tiltAbsolutePosition / ABSOLUTE_ENCODER_RATIO, tiltAbsolutePosition);
         }
 
     }
@@ -242,9 +247,10 @@ public class GrabberTiltSubsystem extends SubsystemBase {
                 if (isEncoderHomed()) {
                     setHomed(true);
                     state = STATE.READY;
+                    tiltEncoder.setPosition(0);
                 } else {
                     // Grabber is not homed -- start moving grabber to home position
-                    setPower(.3);
+                    setPower(-.3);
                     state = STATE.HOMING;
                     myCount = 5;
                 }
@@ -255,6 +261,7 @@ public class GrabberTiltSubsystem extends SubsystemBase {
                     setHomed(true);
                     setPower(0);
                     state = STATE.READY;
+                    tiltEncoder.setPosition(0);
                     break;
                 }
                 if (current > overCurrent) {

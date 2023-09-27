@@ -19,7 +19,9 @@ public class DefaultGrabberCommand extends CommandBase {
         DefaultGrabberCommand.grabberSubsystem = grabberSubsystem;
         this.operatorController = operatorController;
         this.intakeSubsystem = intakeSubsystem;
-        addRequirements(grabberSubsystem);
+        if (grabberSubsystem != null) {
+            addRequirements(grabberSubsystem);
+        }
 
     }
 

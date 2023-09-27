@@ -59,6 +59,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private double elevatorRotationsPerInch = 1; // TODO Fix when connect to real robot
     private double current = 0;
     private GrabberTiltSubsystem grabberSubsystem;
+    private double lastPower = 99;
 
     final private double MAX_CURRENT = 20;
     private int myCount = 0;
@@ -74,7 +75,8 @@ public class ElevatorSubsystem extends SubsystemBase {
         // Setup paramters for the tilt motor
         elevatorMotor = new CANSparkMax(Elevator_MOTOR_ID, MotorType.kBrushless);
         elevatorMotor.restoreFactoryDefaults();
-        elevatorMotor.setSmartCurrentLimit(2);
+        elevatorMotor.setInverted(false);  // TODO do we need to invert????
+        elevatorMotor.setSmartCurrentLimit(20);
         limitSwitch = new LimitSwitch(elevatorMotor, "Elev", Leds.ElevatorForward, Leds.ElevatorReverse);
         distanceEncoder = elevatorMotor.getEncoder();
         distanceEncoder.setPosition(0);
@@ -92,18 +94,29 @@ public class ElevatorSubsystem extends SubsystemBase {
             logf("****** Error attempted to set position out of range positon:%.1f\n", inches);
             return false;
         }
-        double setPoint = inches * elevatorRotationsPerInch;
-        lastElevatorSetPoint = setPoint;
-        lastElevatorInches = inches;
-        logf("Set Elevator position:%.2f set point:%f\n", inches, setPoint);
-        pidController.setReference(setPoint, CANSparkMax.ControlType.kSmartMotion);
-        SmartDashboard.putNumber("Elev SP", setPoint);
-        SmartDashboard.putNumber("Elev Inch", inches);
-        return true;
+        if (grabberSubsystem.isElevatorSafeToMove()) {
+            double setPoint = inches * elevatorRotationsPerInch;
+            lastElevatorSetPoint = setPoint;
+            lastElevatorInches = inches;
+            logf("Set Elevator position:%.2f set point:%f\n", inches, setPoint);
+            pidController.setReference(setPoint, CANSparkMax.ControlType.kSmartMotion);
+            SmartDashboard.putNumber("Elev SP", setPoint);
+            SmartDashboard.putNumber("Elev Inch", inches);
+            return true;
+        } else {
+            logf("***** Elevator not safe to move angle:%.2f\n", grabberSubsystem.getAbsEncoder());
+            return false;
+        }
     }
 
     public void setPower(double value) {
-        elevatorMotor.set(value);
+        if (grabberSubsystem.isElevatorSafeToMove()) {
+            if (lastPower != value || value == 0) {
+                logf("Elevator set a new power %.2f\n", value);
+                elevatorMotor.set(value);
+                lastPower = value;
+            }
+        }
     }
 
     public double getLastElevatorPositionInches() {
@@ -132,12 +145,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public boolean atSetPoint() {
-        double error = distanceEncoder.getPosition() - lastElevatorInches;
+        double error = distanceEncoder.getPosition() - lastElevatorSetPoint;
         if (Robot.count % 10 == 5) {
             SmartDashboard.putNumber("EleErr", error);
         }
         // Note error is in revolutions
-        return Math.abs(error) < .1;
+        return Math.abs(error) < .05;
     }
 
     public boolean getForwardLimitSwitch() {
@@ -160,10 +173,16 @@ public class ElevatorSubsystem extends SubsystemBase {
         distanceEncoder.setPosition(value);
     }
 
+    double lastSetPointForLogging = 0;
     // This method will be called once per scheduler run
     @Override
     public void periodic() {
         limitSwitch.periodic();
+        if(atSetPoint() && lastSetPointForLogging != lastElevatorSetPoint) {
+            logf("Elevator at set point:%.2f requested set point:%.2f\n", distanceEncoder.getPosition(),  lastElevatorSetPoint);
+            setPower(0);  // TODO do we need this?
+            lastSetPointForLogging = lastElevatorSetPoint;
+        }
         current = getElevatorCurrent();
         // TODO Allow homing when connected to real robot after testing
         doHoming(current);
@@ -173,10 +192,11 @@ public class ElevatorSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("ElevPos", round2(getElevatorPos()));
             SmartDashboard.putNumber("ElevLastPos", lastElevatorInches);
             SmartDashboard.putNumber("ElevPwr", round2(elevatorMotor.getAppliedOutput()));
+            SmartDashboard.putNumber("ElevVel", round2(distanceEncoder.getVelocity()));
         }
         if (RobotContainer.showPID == ShowPID.ELEVATOR && Robot.count % 15 == 12) {
             if (Robot.count % 15 == 12) {
-                pid.getPidCoefficientsFromDashBoard();
+                // TODO pid.getPidCoefficientsFromDashBoard();
             }
         }
     }
@@ -192,7 +212,7 @@ public class ElevatorSubsystem extends SubsystemBase {
             case IDLE:
                 // Can home only if intake is retracted
                 if (!grabberSubsystem.isRetracted()) {
-                    if (Robot.count % 50 == 12) {
+                    if (Robot.count % 250 == 12) {
                         logf("Can't Home since the grabber is not retracted angle:%.3f\n",
                                 grabberSubsystem.getAbsEncoder());
                     }
@@ -216,7 +236,7 @@ public class ElevatorSubsystem extends SubsystemBase {
                     state = STATE.OVERCURRENT;
                     break;
                 }
-                setPower(-.2);
+                setPower(.2);
                 break;
             case READY:
                 if (current > MAX_CURRENT) {
@@ -239,7 +259,7 @@ public class ElevatorSubsystem extends SubsystemBase {
                 if (myCount < 0) {
                     if (current > MAX_CURRENT) {
                         // If curent remains high continue to wait
-                        logf("Elevator current remains high -- current:%.2f\n", current);
+                        logf("***** Elevator current remains high -- current:%.2f\n", current);
                         myCount = 20; // Wait another 400 ms for current to go low
                         break;
                     }

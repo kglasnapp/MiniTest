@@ -72,9 +72,9 @@ public class RobotContainer {
   private final static CommandXboxController operatorController = new CommandXboxController(3);
   //private final PhotonCamera photonCamera = new PhotonCamera("photonvision");
   private final PhotonCamera photonCamera = null;
-  public final GrabberTiltSubsystem grabberSubsystem = new GrabberTiltSubsystem();
-  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  public final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem(grabberSubsystem);
+  public GrabberTiltSubsystem grabberSubsystem = null;
+  private IntakeSubsystem intakeSubsystem = null;
+  public ElevatorSubsystem elevatorSubsystem = null;
 
   private final Drivetrain drivetrain = new Drivetrain();
   private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(photonCamera, drivetrain);
@@ -82,17 +82,20 @@ public class RobotContainer {
   private final ChaseTagCommand chaseTagCommand = new ChaseTagCommand(photonCamera, drivetrain,
       poseEstimator::getCurrentPose);
 
+  
   private final FieldHeadingDriveCommand fieldHeadingDriveCommand = new FieldHeadingDriveCommand(
       drivetrain,
       () -> poseEstimator.getCurrentPose().getRotation(),
-      () -> -modifyAxis(driveController.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
-      () -> -modifyAxis(driveController.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
+      () -> -modifyAxis(driveController.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND ,
+      () -> -modifyAxis(driveController.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND ,
       () -> -driveController.getRightY(),
       () -> -driveController.getRightX());
 
   public static boolean smartDashBoardForElevator = true;
   public static RobotMode robotMode;
   public static LedSubsystem leds = new LedSubsystem();
+  public boolean miniMotors = false; // TODO set is want to test motors
+  public final Autonomous autotonomous = new Autonomous(drivetrain);
 
   //private final  CommandXboxController driveController =controller;
   //private final  CommandXboxController operatorContoller = controller;
@@ -101,18 +104,26 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    if (miniMotors) {
+      grabberSubsystem = new GrabberTiltSubsystem();
+      intakeSubsystem = new IntakeSubsystem();
+      elevatorSubsystem = new ElevatorSubsystem(grabberSubsystem);
+    }
     // Set up the default command for the drivetrain.
     drivetrain.setDefaultCommand(new DefaultDriveCommand(
         drivetrain,
         () -> poseEstimator.getCurrentPose().getRotation(),
-        () -> -modifyAxis(driveController.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
-        () -> -modifyAxis(driveController.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND,
+        () -> -modifyAxis(driveController.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND * reduction,
+        () -> -modifyAxis(driveController.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND * reduction,
         () -> -modifyAxis(driveController.getRightX()) * DrivetrainConstants.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
             / 2));
 
     setMode(RobotMode.Cone);
-    grabberSubsystem.setDefaultCommand(new DefaultGrabberCommand(grabberSubsystem, intakeSubsystem, driveController));
-    elevatorSubsystem.setDefaultCommand(new DefaultElevatorCommand(elevatorSubsystem, grabberSubsystem, driveController));
+    if (miniMotors) {
+      grabberSubsystem.setDefaultCommand(new DefaultGrabberCommand(grabberSubsystem, intakeSubsystem, driveController));
+      elevatorSubsystem
+          .setDefaultCommand(new DefaultElevatorCommand(elevatorSubsystem, grabberSubsystem, driveController));
+    }
 
     // Configure the button bindings
     configureButtonBindings();

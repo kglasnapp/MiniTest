@@ -13,13 +13,16 @@ public class DefaultElevatorCommand extends CommandBase {
     GrabberTiltSubsystem grabberSubsystem;
     CommandXboxController operatorController;
     int lastPov = -1;
+    private boolean powerMode = false;
 
     public DefaultElevatorCommand(ElevatorSubsystem elevatorSubsystem, GrabberTiltSubsystem grabberSubsystem,
             CommandXboxController operatorController) {
         this.elevatorSubsystem = elevatorSubsystem;
         this.grabberSubsystem = grabberSubsystem;
         this.operatorController = operatorController;
-        addRequirements(elevatorSubsystem);
+        if (elevatorSubsystem != null) {
+            addRequirements(elevatorSubsystem);
+        }
     }
 
     @Override
@@ -32,11 +35,25 @@ public class DefaultElevatorCommand extends CommandBase {
         int pov = RobotContainer.getDriverPov();
         if (pov != lastPov) {
             double pos = elevatorSubsystem.getLastElevatorPositionInches();
-            if (pov == 270) {
-                elevatorSubsystem.setElevatorPos(pos + 3);
-            }
-            if (pov == 90) {
-                elevatorSubsystem.setElevatorPos(pos - 3);
+            if (powerMode) {
+                // Control Elevator in power mode
+                if (pov == 270) { // Up 
+                    elevatorSubsystem.setPower(-.2);
+                }
+                if (pov == 90) { // Down
+                    elevatorSubsystem.setPower(.2);
+                }
+                if (!(pov == 270 || pov == 90)) {
+                    elevatorSubsystem.setPower(0);
+                }
+            } else {
+                // Control Elevator in position mode
+                if (pov == 270) {
+                    elevatorSubsystem.setElevatorPos(pos + 3);
+                }
+                if (pov == 90) {
+                    elevatorSubsystem.setElevatorPos(pos - 3);
+                }
             }
             lastPov = pov;
         }

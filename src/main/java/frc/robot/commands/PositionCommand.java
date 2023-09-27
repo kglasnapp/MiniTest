@@ -20,6 +20,9 @@ public class PositionCommand extends CommandBase {
     public PositionCommand(RobotContainer robotContainer, OperatorButtons type) {
         this.type = type;
         this.robotContainer = robotContainer;
+        if(!robotContainer.miniMotors){
+            return;
+        } 
 
         addRequirements(robotContainer.grabberSubsystem);
         addRequirements(robotContainer.elevatorSubsystem);
@@ -67,7 +70,7 @@ public class PositionCommand extends CommandBase {
                 break;
         }
         robotContainer.grabberSubsystem.setTiltAngle(tiltAngle);
-        robotContainer.elevatorSubsystem.setElevatorPos(elevatorDistance);
+        // TODO robotContainer.elevatorSubsystem.setElevatorPos(elevatorDistance);
         logf("Init Position Command tilt angle:%.2f elevator distance:%.2f\n", tiltAngle, elevatorDistance);
     }
 
