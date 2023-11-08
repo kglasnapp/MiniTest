@@ -13,10 +13,10 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.DrivetrainSubsystem;
 
 public class DefaultDriveCommand extends CommandBase {
-  private final Drivetrain drivetrain;
+  private final DrivetrainSubsystem drivetrain;
   private final Supplier<Rotation2d> robotAngleSupplier;
   private final DoubleSupplier translationXSupplier;
   private final DoubleSupplier translationYSupplier;
@@ -38,15 +38,15 @@ public class DefaultDriveCommand extends CommandBase {
    * @param rotationSupplier     supplier for rotation component, in radians per
    *                             second
    */
-  public DefaultDriveCommand(Drivetrain drivetrain, Supplier<Rotation2d> robotAngleSupplier,
+  public DefaultDriveCommand(DrivetrainSubsystem drivetrainSubsystem, Supplier<Rotation2d> robotAngleSupplier,
       DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier, DoubleSupplier rotationSupplier) {
-    this.drivetrain = drivetrain;
+    this.drivetrain = drivetrainSubsystem;
     this.robotAngleSupplier = robotAngleSupplier;
     this.translationXSupplier = translationXSupplier;
     this.translationYSupplier = translationYSupplier;
     this.rotationSupplier = rotationSupplier;
 
-    addRequirements(drivetrain);
+    addRequirements(drivetrainSubsystem);
   }
 
   @Override

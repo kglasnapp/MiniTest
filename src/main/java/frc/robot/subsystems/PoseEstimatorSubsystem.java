@@ -30,7 +30,7 @@ import static frc.robot.utilities.Util.logf;
 public class PoseEstimatorSubsystem extends SubsystemBase {
 
   private final PhotonCamera photonCamera;
-  private final Drivetrain drivetrain;
+  private final DrivetrainSubsystem drivetrain;
 
   // Ordered list of target poses by ID (WPILib is adding some functionality for
   // this)
@@ -66,7 +66,7 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
 
   private double previousPipelineTimestamp = 0;
 
-  public PoseEstimatorSubsystem(PhotonCamera photonCamera, Drivetrain drivetrain) {
+  public PoseEstimatorSubsystem(PhotonCamera photonCamera, DrivetrainSubsystem drivetrain) {
     this.photonCamera = photonCamera;
     this.drivetrain = drivetrain;
 

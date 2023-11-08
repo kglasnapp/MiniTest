@@ -1,15 +1,15 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.DrivetrainSubsystem;
 import static frc.robot.Util.logf;
 
 public class ZeroGyroCommand extends CommandBase {
-    Drivetrain m_drivetrainSubsystem;
+    DrivetrainSubsystem m_drivetrainSubsystem;
     BalanceCommand balanceCommand;
     double currentOrientation;
 
-    public ZeroGyroCommand(Drivetrain drivetrainSubsystem, BalanceCommand balanceCommand, double currentOrientation) {
+    public ZeroGyroCommand(DrivetrainSubsystem drivetrainSubsystem, BalanceCommand balanceCommand, double currentOrientation) {
         logf("Init -- Zero Gyro Command\n");
         this.m_drivetrainSubsystem = drivetrainSubsystem;
         this.currentOrientation = currentOrientation;

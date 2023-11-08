@@ -19,7 +19,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Robot;
-import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.DrivetrainSubsystem;
 import static frc.robot.utilities.Util.logf;
 
 public class ChaseTagCommand extends CommandBase {
@@ -34,7 +34,7 @@ public class ChaseTagCommand extends CommandBase {
       new Rotation3d(0.0, 0.0, Math.PI));
 
   private final PhotonCamera photonCamera;
-  private final Drivetrain drivetrain;
+  private final DrivetrainSubsystem drivetrain;
   private final Supplier<Pose2d> poseProvider;
 
   private final ProfiledPIDController xController = new ProfiledPIDController(3, 0, 0, X_CONSTRAINTS);
@@ -45,7 +45,7 @@ public class ChaseTagCommand extends CommandBase {
 
   public ChaseTagCommand(
       PhotonCamera photonCamera,
-      Drivetrain drivetrain,
+      DrivetrainSubsystem drivetrain,
       Supplier<Pose2d> poseProvider) {
     this.photonCamera = photonCamera;
     this.drivetrain = drivetrain;

@@ -56,7 +56,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private RelativeEncoder distanceEncoder;
     private PID_MAX pid = new PID_MAX();
     private boolean homed = false;
-    private double elevatorRotationsPerInch = 1; // TODO Fix when connect to real robot
+    private double elevatorRotationsPerInch = 1; 
     private double current = 0;
     private GrabberTiltSubsystem grabberSubsystem;
     private double lastPower = 99;
@@ -75,7 +75,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         // Setup paramters for the tilt motor
         elevatorMotor = new CANSparkMax(Elevator_MOTOR_ID, MotorType.kBrushless);
         elevatorMotor.restoreFactoryDefaults();
-        elevatorMotor.setInverted(false);  // TODO do we need to invert????
+        elevatorMotor.setInverted(false);  
         elevatorMotor.setSmartCurrentLimit(20);
         limitSwitch = new LimitSwitch(elevatorMotor, "Elev", Leds.ElevatorForward, Leds.ElevatorReverse);
         distanceEncoder = elevatorMotor.getEncoder();
@@ -180,11 +180,10 @@ public class ElevatorSubsystem extends SubsystemBase {
         limitSwitch.periodic();
         if(atSetPoint() && lastSetPointForLogging != lastElevatorSetPoint) {
             logf("Elevator at set point:%.2f requested set point:%.2f\n", distanceEncoder.getPosition(),  lastElevatorSetPoint);
-            setPower(0);  // TODO do we need this?
+            setPower(0);  
             lastSetPointForLogging = lastElevatorSetPoint;
         }
         current = getElevatorCurrent();
-        // TODO Allow homing when connected to real robot after testing
         doHoming(current);
         //pidController.setReference(lastElevatorPosition, CANSparkMax.ControlType.kSmartMotion);
         if (Robot.count % 15 == 8) {
@@ -196,7 +195,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         }
         if (RobotContainer.showPID == ShowPID.ELEVATOR && Robot.count % 15 == 12) {
             if (Robot.count % 15 == 12) {
-                // TODO pid.getPidCoefficientsFromDashBoard();
+               
             }
         }
     }
@@ -264,10 +263,7 @@ public class ElevatorSubsystem extends SubsystemBase {
                         break;
                     }
                     // Current seems to have stablize restore last task
-                    if (getHomed()) {
-                        // TODO Restore any running PID
-                    } else {
-                        // Try to home again
+                    if (!getHomed()) {
                         state = STATE.IDLE;
                     }
                 }

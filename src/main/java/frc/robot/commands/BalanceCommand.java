@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Robot;
-import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.DrivetrainSubsystem;
 // import frc.robot.utilities.SwerveModule;
 
 import static frc.robot.utilities.Util.logf;
@@ -32,12 +32,12 @@ public class BalanceCommand extends CommandBase {
 
     static State state = State.FAST_BACK;
 
-    Drivetrain drivetrainSubsystem;
+    DrivetrainSubsystem drivetrainSubsystem;
 
     double zeroPitch = 0;
     double zeroRoll = 0;
 
-    public BalanceCommand(Drivetrain drivetrainSubsystem) {
+    public BalanceCommand(DrivetrainSubsystem drivetrainSubsystem) {
         this.drivetrainSubsystem = drivetrainSubsystem;
         //SwerveModule.powerRatio = SwerveModule.NORMAL;
         addRequirements(drivetrainSubsystem);

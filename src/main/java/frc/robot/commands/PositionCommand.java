@@ -70,7 +70,7 @@ public class PositionCommand extends CommandBase {
                 break;
         }
         robotContainer.grabberSubsystem.setTiltAngle(tiltAngle);
-        // TODO robotContainer.elevatorSubsystem.setElevatorPos(elevatorDistance);
+        robotContainer.elevatorSubsystem.setElevatorPos(elevatorDistance);
         logf("Init Position Command tilt angle:%.2f elevator distance:%.2f\n", tiltAngle, elevatorDistance);
     }
 

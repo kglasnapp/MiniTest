@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 public class Robot extends TimedRobot {
   private Command autonomousCommand;
 
-  private RobotContainer robotContainer;
+  public RobotContainer robotContainer;
   public static int count = 0;
   public static Alliance alliance;
 

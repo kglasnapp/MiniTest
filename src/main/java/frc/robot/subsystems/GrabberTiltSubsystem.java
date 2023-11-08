@@ -63,7 +63,7 @@ public class GrabberTiltSubsystem extends SubsystemBase {
     private RelativeEncoder tiltEncoder;
     private PID_MAX pid = new PID_MAX();
     private CANCoder absEnc;
-    private double rotationsPerDegree = 1; // TODO fix when connected to Sibling
+    private double rotationsPerDegree = 1; 
     private LimitSwitch limitSwitch;
     private boolean homed = false;
     int myCount = 0; // Counter used for timing in state machine
@@ -226,7 +226,6 @@ public class GrabberTiltSubsystem extends SubsystemBase {
             // we adjust the relative encoder of the tilt
             // motor every 5 secs
             double tiltAbsolutePosition = getAbsEncoder();
-            // TODO put back in when connected to actual intake
             // tiltEncoder.setPosition(tiltAbsolutePosition / ABSOLUTE_ENCODER_RATIO);
             logf("Tilt Motor Angle:%.3f  Abs Encoder Rotations:%.3f Abs Encoder Angle:%.3f\n", getTiltAngleDegrees(),
                     tiltAbsolutePosition / ABSOLUTE_ENCODER_RATIO, tiltAbsolutePosition);

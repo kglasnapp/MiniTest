@@ -6,17 +6,17 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.DrivetrainSubsystem;
 //import frc.robot.commands.ZeroGyroCommand;
 //import frc.robot.commands.BalanceCommand;
 import frc.robot.commands.DisplayLogCommand;
 
 public class Autonomous {
-  Drivetrain m_drivetrainSubsystem;
+  DrivetrainSubsystem m_drivetrainSubsystem;
   //private final BalanceCommand balanceCommand;
   public static SendableChooser<Command> autonomousChooser = new SendableChooser<>();
 
-  public Autonomous(Drivetrain m_drivetrainSubsystem) {
+  public Autonomous(DrivetrainSubsystem m_drivetrainSubsystem) {
     //this.m_drivetrainSubsystem = m_drivetrainSubsystem;
     //balanceCommand = new BalanceCommand(m_drivetrainSubsystem);
     autonomousChooser.setDefaultOption("Case 1 left", getAutonomousCommandCase1());

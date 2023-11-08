@@ -22,7 +22,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.DrivetrainSubsystem;
 
 /**
  * Command for teleop driving where translation and heading are field oriented.
@@ -35,7 +35,7 @@ import frc.robot.subsystems.Drivetrain;
  */
 public class FieldHeadingDriveCommand extends CommandBase {
 
-  private final Drivetrain drivetrain;
+  private final DrivetrainSubsystem drivetrain;
   private final Supplier<Rotation2d> robotAngleSupplier;
   private final DoubleSupplier xSupplier;
   private final DoubleSupplier ySupplier;
@@ -58,7 +58,7 @@ public class FieldHeadingDriveCommand extends CommandBase {
    * @param omegaYSupplier Y supplier for heading
    */
   public FieldHeadingDriveCommand(
-      Drivetrain drivetrain,
+      DrivetrainSubsystem drivetrain,
       Supplier<Rotation2d> robotAngleSupplier,
       DoubleSupplier translationXSupplier,
       DoubleSupplier translationYSupplier,

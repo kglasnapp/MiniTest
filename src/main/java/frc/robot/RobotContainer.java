@@ -32,12 +32,15 @@ import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DefaultElevatorCommand;
 import frc.robot.commands.FieldHeadingDriveCommand;
 import frc.robot.commands.DefaultGrabberCommand;
+import frc.robot.commands.DriveToObjectCommand;
 import frc.robot.commands.PositionCommand;
-import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.GrabberTiltSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LedSubsystem;
+//import frc.robot.subsystems.LimeLightPose;
+import frc.robot.subsystems.CoralSubsystem;
 import frc.robot.subsystems.PoseEstimatorSubsystem;
 import static frc.robot.utilities.Util.logf;
 
@@ -76,8 +79,11 @@ public class RobotContainer {
   private IntakeSubsystem intakeSubsystem = null;
   public ElevatorSubsystem elevatorSubsystem = null;
 
-  private final Drivetrain drivetrain = new Drivetrain();
+  private final DrivetrainSubsystem drivetrain = new DrivetrainSubsystem();
+  //private final LimeLightPose limeLightPose = new LimeLightPose();
   private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(photonCamera, drivetrain);
+  public static CoralSubsystem coralSubsystem = new CoralSubsystem();
+
 
   private final ChaseTagCommand chaseTagCommand = new ChaseTagCommand(photonCamera, drivetrain,
       poseEstimator::getCurrentPose);
@@ -113,8 +119,8 @@ public class RobotContainer {
     drivetrain.setDefaultCommand(new DefaultDriveCommand(
         drivetrain,
         () -> poseEstimator.getCurrentPose().getRotation(),
-        () -> -modifyAxis(driveController.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND * reduction,
-        () -> -modifyAxis(driveController.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND * reduction,
+        () -> -modifyAxis(driveController.getLeftY()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND ,
+        () -> -modifyAxis(driveController.getLeftX()) * DrivetrainConstants.MAX_VELOCITY_METERS_PER_SECOND ,
         () -> -modifyAxis(driveController.getRightX()) * DrivetrainConstants.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
             / 2));
 
@@ -161,6 +167,7 @@ public class RobotContainer {
         setMode(RobotMode.Cone);
       }
     }));
+    driveController.b().whileTrue(new DriveToObjectCommand(drivetrain, "cube"));
 
     operatorController.button(OperatorButtons.CUBE.value).onTrue(Commands.runOnce(new Runnable() {
       public void run() {
