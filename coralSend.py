@@ -31,6 +31,7 @@ import cv2
 import os
 import time
 from networktables import NetworkTables
+import math
 
 from pycoral.adapters.common import input_size
 from pycoral.adapters.detect import get_objects
@@ -41,7 +42,7 @@ from pycoral.utils.edgetpu import run_inference
 def main():
     # Setup Network Tables
     NetworkTables.initialize(server='roborio-3932-frc.local')
-    sd = NetworkTables.getTable('SmartDashboard')
+    sd = NetworkTables.getTable('Coral')
     print("sd", sd)
     default_model_dir = '.'
     default_model = 'conesandcubes_b1.tflite'
@@ -106,18 +107,22 @@ def append_objs_to_img(cv2_im, inference_size, objs, labels, sd):
         x1, y1 = int(bbox.xmax), int(bbox.ymax)
         xMid = ((x0+x1) / 2 - width / 2) / width;
         yMid = ((y0+y1) / 2 - height / 2) / height;
+        xMid = round(xMid, 4)
+        yMid = round(yMid, 4)
         typ = labels.get(obj.id, obj.id)   
         area = abs(x1-x0) * abs(y1-y0)        
         percent = int(100 * obj.score)
-        if percent > 50:
+        sd.putNumber("percent", percent)
+        if percent > 60:
+           sd.putString("type", typ)
            sd.putNumber("xMid", xMid)
            sd.putNumber("yMid", yMid)
            sd.putNumber("area", area)
-           sd.putString("type", typ)
-           sd.putNumber("percent", percent)
-           print(typ,xMid,yMid, area, percent)
+           print(typ, x0, x1, (x0+x1)/2, xMid,yMid, area, percent)
+        else:
+           sd.putString("type", "none")
+       
         label = '{}% {}'.format(percent, labels.get(obj.id, obj.id))
-
         cv2_im = cv2.rectangle(cv2_im, (x0, y0), (x1, y1), (0, 255, 0), 2)
         cv2_im = cv2.putText(cv2_im, label, (x0, y0+30),
                              cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 2)

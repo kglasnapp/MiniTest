@@ -167,7 +167,7 @@ public class RobotContainer {
         setMode(RobotMode.Cone);
       }
     }));
-    driveController.b().whileTrue(new DriveToObjectCommand(drivetrain, "cube"));
+    driveController.b().whileTrue(new DriveToObjectCommand(drivetrain, "cone"));
 
     operatorController.button(OperatorButtons.CUBE.value).onTrue(Commands.runOnce(new Runnable() {
       public void run() {
